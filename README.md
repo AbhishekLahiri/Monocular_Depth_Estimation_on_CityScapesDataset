@@ -1,49 +1,61 @@
-A Comparative Analysis of Monocular Depth Estimation on Cityscapes
+A Comparative Analysis of Monocular Depth Estimation Models on Cityscapes
 
-1. Project Overview
+# Project Overview
 
 This project provides a complete Python pipeline for benchmarking and evaluating various state-of-the-art monocular depth estimation (MDE) models on the Cityscapes dataset.
 
 The primary challenge in this field is that many models (like MiDaS and MonoDepth2) output relative depth, which is not in meters and cannot be directly compared to ground truth. This project implements the full methodology to:
 
-Generate Metric Ground Truth: Load Cityscapes disparity and camera calibration data to calculate the ground-truth metric depth for every pixel.
+**Generate Metric Ground Truth:** Load Cityscapes disparity and camera calibration data to calculate the ground-truth metric depth for every pixel.
 
-Align Relative Models: Implement a robust scale-and-shift alignment (Ground_Truth = s * Prediction + t) by calibrating on a sample of images and applying a global factor.
+**Align Relative Models:** Implement a robust scale-and-shift alignment (Ground_Truth = s * Prediction + t) by calibrating on a sample of images and applying a global factor.
 
-Evaluate Metric Models: Directly test models like ZoeDepth that output metric depth out-of-the-box.
+**Evaluate Metric Models:** Directly test models like ZoeDepth that output metric depth out-of-the-box.
 
-Compare Performance: Run all models through a single, standardized evaluation script to compute 9 standard error and accuracy metrics (AbsRel, RMSE, d1, etc.).
+**Compare Performance:** Run all models through a single, standardized evaluation script to compute 9 standard error and accuracy metrics (AbsRel, RMSE, d1, etc.).
 
-2. Project Structure
+# Project Structure
 
-/your-project-directory/
-│
-├── run_midas_depth.py           # Script 1: For MiDaS & DPT models (Hugging Face)
-├── run_zoedepth.py              # Script 2: For ZoeDepth models (Hugging Face)
-├── run_monodepth2.py            # Script 3: For MonoDepth2 models (GitHub Repo)
-├── depth_evaluation.py          # Script 4: The unified evaluation script
-│
-├── README.md                             # This file
-│
-└── monodepth2/                             # Needs to be cloned - GitHub repo for MonoDepth2
-    ├── models/                           # (Contains downloaded .pth weights)
-    └── ...
+    /project-directory/
+
+    │
+
+    ├── run_midas_depth.py           # Script 1: For MiDaS & DPT models (Hugging Face)
+
+    ├── run_zoedepth.py              # Script 2: For ZoeDepth models (Hugging Face)
+
+    ├── run_monodepth2.py            # Script 3: For MonoDepth2 models (GitHub Repo)
+
+    ├── depth_evaluation.py          # Script 4: The unified evaluation script
+
+    │
+
+    ├── README.md                             # This file
+
+    │
+
+    └── monodepth2/                           # Needs to be cloned - GitHub repo for MonoDepth2
+
+        ├── models/                           # (Contains downloaded .pth weights)
+    
+        └── ...
+    
 
 
-3. Setup & Installation
+# Setup and Installation
 
-Step 1: Install Python Libraries
+## Step 1: Install Python Libraries
 
 Install all necessary Python packages.
 
-# Core libraries for AI and image processing
+### Core libraries for AI and image processing
 pip install torch torchvision transformers numpy pillow matplotlib
 
-# 'scipy' is needed for the least-squares alignment in the processing scripts
+### 'scipy' is needed for the least-squares alignment in the processing scripts
 pip install scipy
 
 
-Step 2: Get Cityscapes Dataset
+## Step 2: Get Cityscapes Dataset
 
 You must have the Cityscapes dataset downloaded and extracted. The scripts require the following three folders:
 
@@ -53,7 +65,7 @@ disparity/: Contains the 16-bit disparity maps for ground truth.
 
 camera/: Contains the .json calibration files (with focal length and baseline) needed to convert disparity to metric depth.
 
-Step 3: Set up MonoDepth2
+## Step 3: Set up MonoDepth2
 
 The MonoDepth2 model is not on Hugging Face and requires special setup.
 
@@ -69,9 +81,9 @@ bash download_models.sh
 cd ..
 
 
-4. Workflow: From Processing to Evaluation
+# Workflow: From Processing to Evaluation
 
-Step 1: Configure Paths
+## Step 1: Configure Paths
 
 Before running, you MUST edit the configuration variables at the top of all three processing scripts (run_midas_depth.py, run_zoedepth.py, run_monodepth2.py):
 
@@ -79,7 +91,7 @@ CITYSCAPES_BASE_DIR: Set this to the full path of your Cityscapes dataset folder
 
 MONODEPTH2_REPO_PATH (in run_monodepth2.py only): Set this to the full path of the monodepth2 folder you just cloned.
 
-Step 2: Run Model Processing
+## Step 2: Run Model Processing
 
 Run the processing scripts one by one to generate the raw prediction files. Each script will create a new, model-specific output folder (e.g., ./cityscapes_output_dpt-beit-large-512/).
 
@@ -120,22 +132,22 @@ Run the script:
 python run_monodepth2.py
 
 
-Step 3: Run Evaluation
+## Step 3: Run Evaluation
 
 After a processing script finishes, use depth_evaluation.py to get the final metrics. This script takes the output directory as a command-line argument.
 
-# Example for the DPT-BEiT model
+### Example for the DPT-BEiT model
 python depth_evaluation.py --dir ./cityscapes_output_dpt-beit-large-512
 
-# Example for the MonoDepth2 model
+### Example for the MonoDepth2 model
 python depth_evaluation.py --dir ./cityscapes_output_mono+stereo_640x192
 
 
 This will print a formatted table of all 9 error and accuracy metrics.
 
-5. Script-by-Script Explanation
+# Script-by-Script Explanation
 
-run_midas_depth.py
+### _run_midas_depth.py_
 
 Purpose: Runs all relative depth models from Hugging Face (MiDaS v2.1, DPT, MiDaS v3.1).
 
@@ -149,7 +161,7 @@ Aligns: Calculates the median scale and shift from the calibration phase. This s
 
 Saves: For each image, it saves the metric ground truth (_gt.npy) and the final, aligned metric prediction (_pred.npy) to a model-specific output folder.
 
-run_zoedepth.py
+### _run_zoedepth.py_
 
 Purpose: Runs all metric depth models from Hugging Face (ZoeDepth).
 
@@ -161,7 +173,7 @@ No Alignment: This is the key difference. ZoeDepth is trained to output meters d
 
 Saves: For each image, it saves the metric ground truth (_gt.npy) and the model's raw metric prediction (_pred.npy).
 
-run_monodepth2.py
+### _run_monodepth2.py_
 
 Purpose: Runs the relative depth monodepth2 model from the nianticlabs GitHub repository.
 
@@ -173,7 +185,7 @@ Aligns: Uses the exact same calibration and alignment logic as run_midas_depth.p
 
 Saves: For each image, it saves the metric ground truth (_gt.npy) and the final, aligned metric prediction (_pred.npy).
 
-depth_evaluation.py
+### _depth_evaluation.py_
 
 Purpose: The single, unified tool for calculating results for any model.
 
@@ -186,3 +198,4 @@ Gathers Data: Scans the directory, loads all _gt.npy and _pred.npy file pairs, a
 Masks: Applies the standard evaluation mask (e.g., 0.1m to 80m) to both the ground truth and prediction data.
 
 Calculates: Computes and prints the final aggregate table for all 9 metrics (AbsRel, SqRel, RMSE, RMSElog, log10, SILog, d1, d2, d3).
+
